@@ -12,6 +12,6 @@ while (b.toString().length < 1000) {
   let oldB = b; // store b to a temp variable
   b = a+b; // increment b
   a = oldB; // set a to the old b
-  i++; // bump the index
+  i++; // bump the index on each loop
   console.log(i, b.toString().length); // log out our index alongside the length of the fibonacci number
 }
