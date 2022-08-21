@@ -6,11 +6,18 @@ Each problem can be worked on in a separate sub-directory. Make a pull request i
 Below is a rough outline of a typical workflow for creating a new branch and pushing code back to github.
 
 ```bash
+# pull down any changes from github
+git pull
+
+# make sure you're on the master branch before creating a new branch, otherwise you'll branch from the wrong code
+git checkout master
+
+# make a new branch, ideally indicating what you're working on, in this fictional example it's problem 23
 git checkout -b problem-23
 
 # write some code
 
-# add files in the current directory to git
+# add any new files in the current directory (that's what the dot means) to git
 git add .
 
 # commit your changes
