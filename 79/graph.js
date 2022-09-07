@@ -19,8 +19,10 @@ validSubsets.forEach(code => {
     canFollow[third] = {};
   }
 
+  //add a third canFollow to make sure the first number comes before the third also in the subsets
   canFollow[first][second] = true;
   canFollow[second][third] = true;
+  canFollow[first][third] = true;
 })
 
 // log out our graph thing
