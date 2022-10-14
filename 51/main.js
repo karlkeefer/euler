@@ -6,6 +6,8 @@ By replacing the 3rd and 4th digits of 56**3 with the same digit, this 5-digit n
 Find the smallest prime which, by replacing part of the number (not necessarily adjacent digits) with the same digit, is part of an eight prime value family.
 */
 
+const digitLength = 6;
+
 // generate primes
 let primeList = [2];
 let i = 0;
@@ -22,7 +24,7 @@ const isPrime = (num) => {
 }
 
 // generate tons of primes
-for (let i=3; i < 100000;i++) {
+for (let i=3; i < Math.pow(10, digitLength);i++) {
     if (isPrime(i)){
         primeList.push(i);
     }
@@ -40,82 +42,78 @@ primeList.forEach(p=>{
     }
 })
 
-// generate digit patterns
-const permute = (permutation) => {
-    var length = permutation.length,
-        result = [permutation.slice()],
-        c = new Array(length).fill(0),
-        i = 1, k, p;
-  
-    while (i < length) {
-      if (c[i] < i) {
-        k = i % 2 && c[i];
-        p = permutation[i];
-        permutation[i] = permutation[k];
-        permutation[k] = p;
-        ++c[i];
-        i = 1;
-        result.push(permutation.slice());
-      } else {
-        c[i] = 0;
-        ++i;
-      }
-    }
-    return result.map(items => items.join(''));
-}
-
-const digitMatch = "[0-9]{1}" 
-const wildCardMatch = "x"
-
-// generate digit patterns for regex tests
-// x will be replaced laters
-const digitPattern = (len) => {
-    let patterns = [];
-    for (let digits = 1; digits < len; digits++) {
-        let p = [];
-        for (let i = 0; i < digits; i++) {
-            p.push(digitMatch);
-        }
-        for (let i = 0; i < len-digits; i++) {
-            p.push(wildCardMatch);
-        }
-        patterns = patterns.concat(permute(p));
-    }
-    
-    return patterns;
-}
-
-// generate patterns, then test those patterns against primes to build "families"
-// NOTE: this may be a dead-end approach... 
-// I'm really unsure how to make "test patterns" for a family.
-
-// ...maybe a giant hashMap {} where the key is each digit, including a "wildcard" digit in each spot?
+// make a giant hashMap {} where the key is each digit, including a "wildcard" digit in each spot?
 // {
 //   *: {
 //     1: [ 11, 31, 41, 61, 71 ]
 //   }
 // }
 
-const digitLength = 2;
-const patterns = digitPattern(digitLength);
-
 let results = {};
 
-patterns.forEach(pattern => {
-    for (let i=0;i<10;i++) {
-        let patternWithDigit = pattern.replace('x',i);
-        let regex = new RegExp(patternWithDigit);
-        primeByDigits[digitLength].forEach(p => {
-            if (regex.test(String(p))) {
-                if (!results[regex]) {
-                    results[regex] = [p];
-                } else {
-                    results[regex].push(p);
+const insertPattern = (pattern, prime) => {
+    if (pattern == String(prime)) {
+        return null;
+    }
+
+    let insertPoint = results;
+    for( let j=0; j < pattern.length; j++) {
+        const currentDigit = pattern[j];
+        if (j === digitLength - 1) {
+            if (!insertPoint[currentDigit]) {
+                insertPoint[currentDigit] = [prime];
+            } else {
+                if (!insertPoint[currentDigit].includes(prime)) {
+                    insertPoint[currentDigit].push(prime);
+                    if (insertPoint[currentDigit].length > 6) {
+                        // only output large families
+                        console.log(insertPoint[currentDigit]);
+                    }
                 }
             }
-        })
+        } else {
+            if (!insertPoint[currentDigit]) {
+                insertPoint[currentDigit] = {};
+            }
+
+            insertPoint = insertPoint[currentDigit];
+        }
+    }
+}
+
+// TODO: the replacement logic for generating * patterns is slow, but also doesn't handle more than 3 occurences(!)
+primeByDigits[digitLength].forEach(prime => {
+    for (let i=0;i<10;i++) {
+        let pattern = String(prime).replace(new RegExp(i, 'g'),'*');
+        insertPattern(pattern, prime);
+
+        let occurences = pattern.length - String(prime).replace(new RegExp(i, 'g'),'').length;
+        if (occurences > 1) {
+            // first and last, 1 star
+            pattern = String(prime).replace(i,'*');
+            insertPattern(pattern, prime);
+            pattern = String(prime).split('').reverse().join('').replace(i,'*').split('').reverse().join('');
+            insertPattern(pattern, prime);
+        }
+        if (occurences > 2) {
+            // first 2, last 2, middle star
+            pattern = String(prime).replace(i,'*').replace(i,'*');
+            insertPattern(pattern, prime);
+            pattern = String(prime).split('').reverse().join('').replace(i,'*').replace(i,'*').split('').reverse().join('');
+            insertPattern(pattern, prime);
+            let count = 0;
+            pattern = String(prime).split('').map(char => {
+                count++;
+                if (count == 2) {
+                    return '*';
+                } else {
+                    return char;
+                }
+            }).join('');
+            insertPattern(pattern, prime);
+        }
+        if (occurences > 3) {
+            // generate the 3 star permutations
+        }
     }    
 })
-
-console.log(results);
-
